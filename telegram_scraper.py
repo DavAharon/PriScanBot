@@ -48,8 +48,12 @@ async def main():
     async with TelegramClient("user_session", api_id, api_hash) as client:
         channels = [
             "@news_kosmetolog",
-            "@beautyclinic",
-            "@skindeals"
+            "@cosmetology_namo",
+            "@kosmetologmed",
+            "@aynastudy",
+            "@cosmetolog_forum",
+            "@kosmetolog",
+            "@dr_stashevich" 
         ]
 
         for target_channel in channels:
