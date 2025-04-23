@@ -53,7 +53,9 @@ async def main():
             "@aynastudy",
             "@cosmetolog_forum",
             "@kosmetolog",
-            "@dr_stashevich" 
+            "@dr_stashevich",
+            "@skindeals",
+            "@beautyclinic"
         ]
 
         for target_channel in channels:
