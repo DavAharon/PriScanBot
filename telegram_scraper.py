@@ -45,7 +45,8 @@ def extract_product_name(text):
 # Main logic
 async def main():
     logging.info("🔄 Starting scheduled scrape task")
-    async with TelegramClient("user_session", api_id, api_hash) as client:
+    client = TelegramClient("user_session", api_id, api_hash)
+    await client.start(phone=phone)
         channels = [
             "@news_kosmetolog",
             "@cosmetology_namo",
