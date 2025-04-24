@@ -43,54 +43,51 @@ def extract_product_name(text):
     return lines[0][:100] if lines else "Unknown"
 
 # Main logic
-async def main():
-    logging.info("🔄 Starting scheduled scrape task")
-    client = TelegramClient("user_session", api_id, api_hash)
-    await client.start(phone=phone)
-        channels = [
-            "@news_kosmetolog",
-            "@cosmetology_namo",
-            "@kosmetologmed",
-            "@aynastudy",
-            "@cosmetolog_forum",
-            "@kosmetolog",
-            "@dr_stashevich",
-            "@skindeals",
-            "@beautyclinic"
-        ]
+client = TelegramClient("user_session", api_id, api_hash)
+await client.start(phone=phone)
 
-        for target_channel in channels:
-            logging.info(f"📡 Scraping: {target_channel}")
-            try:
-                entity = await client.get_entity(target_channel)
-                history = await client(GetHistoryRequest(
-                    peer=entity,
-                    limit=20,
-                    offset_date=None,
-                    offset_id=0,
-                    max_id=0,
-                    min_id=0,
-                    add_offset=0,
-                    hash=0
-                ))
+channels = [
+    "@news_kosmetolog",
+    "@cosmetology_namo",
+    "@kosmetologmed",
+    "@aynastudy",
+    "@cosmetolog_forum",
+    "@kosmetolog",
+    "@dr_stashevich"
+]
 
-                for msg in history.messages:
-                    if msg.message:
-                        full_text = msg.message
-                        product_name = extract_product_name(full_text)
-                        price = extract_price(full_text)
-                        links = extract_links(full_text)
+for target_channel in channels:
+    logging.info(f"📡 Scraping: {target_channel}")
+    try:
+        entity = await client.get_entity(target_channel)
+        history = await client(GetHistoryRequest(
+            peer=entity,
+            limit=20,
+            offset_date=None,
+            offset_id=0,
+            max_id=0,
+            min_id=0,
+            add_offset=0,
+            hash=0
+        ))
 
-                        cursor.execute("""
-                            INSERT INTO extracted_data (channel, product_name, price, links, full_text)
-                            VALUES (?, ?, ?, ?, ?)
-                        """, (target_channel, product_name, price, links, full_text))
-                        conn.commit()
+        for msg in history.messages:
+            if msg.message:
+                full_text = msg.message
+                product_name = extract_product_name(full_text)
+                price = extract_price(full_text)
+                links = extract_links(full_text)
 
-                logging.info(f"✅ Done scraping: {target_channel}")
+                cursor.execute("""
+                    INSERT INTO extracted_data (channel, product_name, price, links, full_text)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (target_channel, product_name, price, links, full_text))
+                conn.commit()
 
-            except Exception as e:
-                logging.error(f"❌ Failed to scrape {target_channel}: {e}")
+        logging.info(f"✅ Done scraping: {target_channel}")
+
+    except Exception as e:
+        logging.error(f"❌ Failed to scrape {target_channel}: {e}")
 
     logging.info("✅ All channels scanned and data saved.")
     conn.close()
