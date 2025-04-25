@@ -49,5 +49,5 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
 request = HTTPXRequest(connect_timeout=30, read_timeout=30)
 app = ApplicationBuilder().token(BOT_TOKEN).request(request).build()
 app.add_handler(CommandHandler("search", search))
-print("🤖 PriScanBot is now running...")
+print("🤖 PriScanBot2 is now running...")
 app.run_polling()
