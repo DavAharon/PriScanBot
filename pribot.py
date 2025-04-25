@@ -13,6 +13,15 @@ from dotenv import load_dotenv
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("👋 Hello! I'm PriScanBot 2.0 and I'm active!")
+
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+
+if __name__ == "__main__":
+    app.run_polling()
+    
 # Search messages.db
 def search_messages(keyword):
     conn = sqlite3.connect("messages.db")
