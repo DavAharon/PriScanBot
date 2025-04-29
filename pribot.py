@@ -1,62 +1,53 @@
-import os
-import sqlite3
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    ContextTypes,
-)
-from telegram.request import HTTPXRequest
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import sqlite3
+import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Hello! I'm PriScanBot 2.0 and I'm active!")
+    await update.message.reply_text("👋 Hello! Send /search keyword to find offers.")
+
+async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("❗ Please provide a search keyword.\nUsage: /search лазер")
+        return
+
+    keyword = context.args[0]
+    try:
+        conn = sqlite3.connect('messages.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT channel, product_name, price, links FROM extracted_data WHERE full_text LIKE ? LIMIT 5",
+            (f"%{keyword}%",)
+        )
+        results = cursor.fetchall()
+        conn.close()
+
+        if results:
+            reply = ""
+            for channel, product_name, price, links in results:
+                reply += f"📢 *{product_name}* ({channel})\n"
+                if price:
+                    reply += f"💰 Price: {price}\n"
+                if links:
+                    reply += f"🔗 {links}\n"
+                reply += "\n"
+            await update.message.reply_text(reply, parse_mode="Markdown")
+        else:
+            await update.message.reply_text("❗ No matching results found.")
+
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error: {str(e)}")
 
 app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("search", search))
 
 if __name__ == "__main__":
+    print("PriScanBot2 is now running...")
     app.run_polling()
     
-# Search messages.db
-def search_messages(keyword):
-    conn = sqlite3.connect("messages.db")
-    cursor = conn.cursor()
-    query = """
-        SELECT product_name, price, links
-        FROM extracted_data
-        WHERE full_text LIKE ?
-        ORDER BY id DESC
-        LIMIT 3
-    """
-    cursor.execute(query, (f"%{keyword}%",))
-    results = cursor.fetchall()
-    conn.close()
 
-    if not results:
-        return "❌ No results found."
-    
-    reply = ""
-    for product, price, links in results:
-        reply += f"🧴 {product}\n💰 {price or 'N/A'}\n🔗 {links or '—'}\n\n"
-    return reply
-
-# /search handler
-async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("Usage: /search <keyword>")
-        return
-    keyword = " ".join(context.args)
-    result = search_messages(keyword)
-    await update.message.reply_text(result)
-
-# Setup and run bot
-request = HTTPXRequest(connect_timeout=30, read_timeout=30)
-app = ApplicationBuilder().token(BOT_TOKEN).request(request).build()
-app.add_handler(CommandHandler("search", search))
-print("🤖 PriScanBot2 is now running...")
-app.run_polling()
