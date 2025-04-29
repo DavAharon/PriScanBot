@@ -8,7 +8,11 @@ load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user
+    chat_id = update.message.chat_id
+    print(f"📩 New message from {user.username}, chat_id: {chat_id}")
     await update.message.reply_text("👋 Hello! PriScanBot 2.0 is online.\nUse /search <keyword> to find products.")
+
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
